@@ -1,7 +1,7 @@
 import chalk from 'chalk';
-import express, { response } from 'express';
+import express from 'express';
 import cors from 'cors';
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import dotenv from "dotenv";
 import dayjs from "dayjs"
 import joi from 'joi';
@@ -147,6 +147,29 @@ async function updateParticipants() {
 }
 
 setInterval(updateParticipants, 15000);
+
+app.delete('/messages/:id', async (req, res) => {
+  const { id } = req.params;
+  const { user: from } = req.headers;
+  const objectID = { _id: new ObjectId(id) };
+
+  try {
+    const collection = db.collection("messages");
+    const message = await collection.findOne(objectID);
+    if (!message) {
+      res.sendStatus(404);
+      return;
+    }
+    if (message.from !== from) {
+      res.sendStatus(401);
+      return;
+    }
+    await collection.deleteOne(objectID);
+    res.sendStatus(200)
+  } catch (error) {
+    res.status(500).send(error)
+  }
+});
 
 app.listen(PORT, () => {
   console.log(chalk.green.bold(`Servidor rodando na porta ${PORT}`));
