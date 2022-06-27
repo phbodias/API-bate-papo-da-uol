@@ -4,6 +4,7 @@ import cors from 'cors';
 import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
 import dayjs from "dayjs"
+import joi from 'joi';
 
 dotenv.config();
 const PORT = process.env.PORTA;
@@ -18,6 +19,15 @@ let db = null;
 const mongoClient = new MongoClient(process.env.MONGO_URL);
 const promise = mongoClient.connect();
 promise.then(() => db = mongoClient.db(process.env.BANCO));
+
+const participantsSchema = joi.object({
+  name: joi.string().required()
+})
+const messagesSchema = joi.object({
+  to: joi.string().min(1).required(),
+  text: joi.string().min(1).required(),
+  type: joi.string().valid('message', 'private_message').required()
+})
 
 app.post('/participants', async (req, res) => {
 
