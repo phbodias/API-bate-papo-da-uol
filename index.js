@@ -50,8 +50,7 @@ app.post('/participants', async (req, res) => {
     await db.collection('messages').insertOne({ from: name, to: 'Todos', text: 'entra na sala...', type: 'status', time: time })
     res.sendStatus(201);
   } catch (error) {
-    console.error(error);
-    res.sendStatus(500);
+    res.sendStatus(500).send(error);
   }
 });
 
@@ -60,7 +59,7 @@ app.get('/participants', async (req, res) => {
     const participants = await db.collection('participants').find().toArray();
     res.send(participants);
   } catch (error) {
-    res.sendStatus(500);
+    res.sendStatus(500).send(error);
   }
 });
 
@@ -105,7 +104,7 @@ app.post('/messages', async (req, res) => {
     await collection.insertOne(message);
     res.sendStatus(201);
   } catch (error) {
-    res.sendStatus(500);
+    res.sendStatus(500).send(error);
   }
 
 });
@@ -143,7 +142,7 @@ async function updateParticipants() {
       }
     }
   } catch (erro) {
-    res.status(500)
+    res.sendStatus(500).send(error);
   }
 }
 
