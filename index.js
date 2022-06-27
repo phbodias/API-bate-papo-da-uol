@@ -100,6 +100,43 @@ app.post('/messages', async (req, res) => {
 
 });
 
+app.post("/status", async (req, res) => {
+  const { user: userName } = req.headers;
+  try {
+    const collection = db.collection("participants");
+    const status = await collection.findOne({ name: userName });
+    if (!status) {
+      res.sendStatus(404);
+      return;
+    } else {
+      await collection.updateOne({ name: status.name }, {
+        $set: {
+          lastStatus: Date.now()
+        }
+      });
+      res.sendStatus(200);
+    }
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+async function updateParticipants() {
+  try {
+    const participants = await db.collection('participants').find().toArray();
+    for (let i = 0; i < participants.length; i++) {
+      const inatividade = Date.now() - participants[i].lastStatus;
+      if (inatividade > 10000) {
+        const message = { from: participants[i].name, to: 'Todos', text: 'sai da sala...', type: 'status', time: time };
+        await db.collection('messages').insertOne(message);
+        await db.collection('participants').deleteOne(participants[i]);
+      }
+    }
+  } catch (erro) {
+    res.status(500)
+  }
+}
+
 setInterval(updateParticipants, 15000);
 
 app.listen(PORT, () => {
